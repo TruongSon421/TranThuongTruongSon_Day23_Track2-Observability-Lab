@@ -1,0 +1,48 @@
+## Promtail — reads app container logs and pushes to Loki.
+
+server:
+  http_listen_port: 9080
+  http_listen_address: "0.0.0.0"
+
+positions:
+  filename: /tmp/promtail-positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: inference-api
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+        filters:
+          - name: label
+            values: ["app=day23"]
+    relabel_configs:
+      # Map __meta_docker_container_label_app -> service_name
+      - source_labels: [__meta_docker_container_label_app]
+        regex: (.+)
+        target_label: service_name
+        replacement: inference-api
+    pipeline_stages:
+      # Parse Docker json-file driver format: {"log":"<json>","stream":"stdout","time":"..."}
+      - json:
+          expressions:
+            log: log
+            stream: stream
+            timestamp: time
+      # Parse inner structlog JSON to extract fields
+      - json:
+          expressions:
+            event: event
+            trace_id: trace_id
+            model: model
+            level: level
+            input_tokens: input_tokens
+            output_tokens: output_tokens
+            quality: quality
+            duration_seconds: duration_seconds
+          source: log
+      # Set level as Loki label
+      - labels:
+          level:

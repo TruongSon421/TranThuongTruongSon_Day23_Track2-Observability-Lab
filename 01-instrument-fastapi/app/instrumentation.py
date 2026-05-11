@@ -17,6 +17,29 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from prometheus_client import Counter, Gauge, Histogram
 
+# ── Pyroscope profiling (B1 bonus) ────────────────────────────────
+# Initialize when env vars are set (via pyroscope-up target)
+_pyroscope_server = os.environ.get("PYROSCOPE_SERVER")
+_pyroscope_app_name = os.environ.get("PYROSCOPE_APP_NAME")
+if _pyroscope_server and _pyroscope_app_name:
+    try:
+        import pyroscope_io as pyroscope
+        pyroscope.configure(
+            server_address=_pyroscope_server,
+            application_name=_pyroscope_app_name,
+            sample_rate=int(os.environ.get("PYROSCOPE_SAMPLE_RATE", "100")),
+        )
+    except ImportError:
+        try:
+            import pyroscope
+            pyroscope.configure(
+                server_address=_pyroscope_server,
+                application_name=_pyroscope_app_name,
+                sample_rate=int(os.environ.get("PYROSCOPE_SAMPLE_RATE", "100")),
+            )
+        except Exception:
+            pass
+
 # ── Prometheus metrics ────────────────────────────────────────
 INFERENCE_REQUESTS = Counter(
     "inference_requests_total",
@@ -66,7 +89,10 @@ def setup_otel() -> None:
     provider = TracerProvider(resource=resource)
     endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://otel-collector:4317")
     provider.add_span_processor(
-        BatchSpanProcessor(OTLPSpanExporter(endpoint=endpoint, insecure=True))
+        BatchSpanProcessor(
+            OTLPSpanExporter(endpoint=endpoint, insecure=True),
+            schedule_delay_millis=50,
+        )
     )
     trace.set_tracer_provider(provider)
     # Auto-instrument FastAPI handlers (creates server spans for every route)

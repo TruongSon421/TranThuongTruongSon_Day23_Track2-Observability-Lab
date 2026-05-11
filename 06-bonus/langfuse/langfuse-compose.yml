@@ -1,0 +1,208 @@
+# Langfuse v3 — LLM-native observability (B2 bonus)
+# Self-hosted via Docker — full stack: PostgreSQL + ClickHouse + Redis + MinIO + Langfuse
+# Based on: https://github.com/langfuse/langfuse/blob/main/docker-compose.yml
+
+services:
+  langfuse-worker:
+    image: docker.io/langfuse/langfuse-worker:3
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    environment:
+      NEXTAUTH_URL: http://localhost:3001
+      DATABASE_URL: postgresql://postgres:langfusepg@postgres:5432/postgres
+      SALT: lab-salt-change-in-production
+      ENCRYPTION_KEY: dc940a966770ab608c030222e1219f26bf66e796da597e679e258e8356be5758
+      TELEMETRY_ENABLED: "false"
+      CLICKHOUSE_MIGRATION_URL: clickhouse://clickhouse:9000
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: clickhouse
+      CLICKHOUSE_CLUSTER_ENABLED: "false"
+      LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: minio
+      LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: miniosecret
+      LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://minio:9000
+      LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+      LANGFUSE_S3_EVENT_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_EVENT_UPLOAD_REGION: auto
+      LANGFUSE_S3_EVENT_UPLOAD_PREFIX: events/
+      LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID: minio
+      LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY: miniosecret
+      LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: http://localhost:9092
+      LANGFUSE_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE: "true"
+      LANGFUSE_S3_MEDIA_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_MEDIA_UPLOAD_REGION: auto
+      LANGFUSE_S3_MEDIA_UPLOAD_PREFIX: media/
+      LANGFUSE_S3_BATCH_EXPORT_ACCESS_KEY_ID: minio
+      LANGFUSE_S3_BATCH_EXPORT_SECRET_ACCESS_KEY: miniosecret
+      LANGFUSE_S3_BATCH_EXPORT_ENDPOINT: http://minio:9000
+      LANGFUSE_S3_BATCH_EXPORT_FORCE_PATH_STYLE: "true"
+      LANGFUSE_S3_BATCH_EXPORT_BUCKET: langfuse
+      LANGFUSE_S3_BATCH_EXPORT_REGION: auto
+      LANGFUSE_S3_BATCH_EXPORT_PREFIX: exports/
+      LANGFUSE_S3_BATCH_EXPORT_EXTERNAL_ENDPOINT: http://localhost:9092
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_AUTH: langfuseredis
+      REDIS_TLS_ENABLED: "false"
+    networks: [obs]
+
+  langfuse-web:
+    image: docker.io/langfuse/langfuse:3
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      NEXTAUTH_URL: http://localhost:3001
+      NEXTAUTH_SECRET: lab-nextauth-secret-change-in-production
+      DATABASE_URL: postgresql://postgres:langfusepg@postgres:5432/postgres
+      SALT: lab-salt-change-in-production
+      ENCRYPTION_KEY: dc940a966770ab608c030222e1219f26bf66e796da597e679e258e8356be5758
+      TELEMETRY_ENABLED: "false"
+      CLICKHOUSE_MIGRATION_URL: clickhouse://clickhouse:9000
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: clickhouse
+      CLICKHOUSE_CLUSTER_ENABLED: "false"
+      LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: minio
+      LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: miniosecret
+      LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://minio:9000
+      LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+      LANGFUSE_S3_EVENT_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_EVENT_UPLOAD_REGION: auto
+      LANGFUSE_S3_EVENT_UPLOAD_PREFIX: events/
+      LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID: minio
+      LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY: miniosecret
+      LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: http://localhost:9092
+      LANGFUSE_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE: "true"
+      LANGFUSE_S3_MEDIA_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_MEDIA_UPLOAD_REGION: auto
+      LANGFUSE_S3_MEDIA_UPLOAD_PREFIX: media/
+      LANGFUSE_S3_BATCH_EXPORT_ACCESS_KEY_ID: minio
+      LANGFUSE_S3_BATCH_EXPORT_SECRET_ACCESS_KEY: miniosecret
+      LANGFUSE_S3_BATCH_EXPORT_ENDPOINT: http://minio:9000
+      LANGFUSE_S3_BATCH_EXPORT_FORCE_PATH_STYLE: "true"
+      LANGFUSE_S3_BATCH_EXPORT_BUCKET: langfuse
+      LANGFUSE_S3_BATCH_EXPORT_REGION: auto
+      LANGFUSE_S3_BATCH_EXPORT_PREFIX: exports/
+      LANGFUSE_S3_BATCH_EXPORT_EXTERNAL_ENDPOINT: http://localhost:9092
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_AUTH: langfuseredis
+      REDIS_TLS_ENABLED: "false"
+      LANGFUSE_INIT_ORG_ID: lab-org
+      LANGFUSE_INIT_ORG_NAME: lab-org
+      LANGFUSE_INIT_PROJECT_ID: lab-project
+      LANGFUSE_INIT_PROJECT_NAME: lab-project
+      LANGFUSE_INIT_PROJECT_PUBLIC_KEY: lf_pk_1aec14dd1edd572853fe202731071653
+      LANGFUSE_INIT_PROJECT_SECRET_KEY: lf_sk_068a3f63c6dada2038bec9ec9d80881b416d76f8fbaa1ce6deb500b517e4b5d4
+      LANGFUSE_INIT_USER_EMAIL: flask@langfuse.com
+      LANGFUSE_INIT_USER_PASSWORD: langfuse@123
+      LANGFUSE_INIT_USER_NAME: lab-admin
+    networks: [obs]
+
+  clickhouse:
+    image: docker.io/clickhouse/clickhouse-server
+    restart: unless-stopped
+    user: "101:101"
+    environment:
+      CLICKHOUSE_DB: default
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: clickhouse
+    volumes:
+      - langfuse-clickhouse-data:/var/lib/clickhouse
+    ports:
+      - "127.0.0.1:8123:8123"
+      - "127.0.0.1:9000:9000"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123/ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+    networks: [obs]
+
+  minio:
+    image: cgr.dev/chainguard/minio
+    restart: unless-stopped
+    entrypoint: sh
+    command: >
+      -c 'mkdir -p /data/langfuse && minio server --address ":9000" --console-address ":9001" /data'
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: miniosecret
+    ports:
+      - "127.0.0.1:9092:9000"       # MinIO API
+      - "127.0.0.1:9093:9001"      # MinIO Console
+    volumes:
+      - langfuse-minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    networks: [obs]
+
+  redis:
+    image: docker.io/redis:7
+    restart: unless-stopped
+    command: >
+      --requirepass langfuseredis
+      --maxmemory-policy noeviction
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - langfuse-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "langfuseredis", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [obs]
+
+  postgres:
+    image: docker.io/postgres:17
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: langfusepg
+      POSTGRES_DB: postgres
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - langfuse-postgres-data:/var/lib/postgresql/data
+    networks: [obs]
+
+volumes:
+  langfuse-clickhouse-data:
+  langfuse-minio-data:
+  langfuse-redis-data:
+  langfuse-postgres-data:
+
+networks:
+  obs:
+    name: day23-obs

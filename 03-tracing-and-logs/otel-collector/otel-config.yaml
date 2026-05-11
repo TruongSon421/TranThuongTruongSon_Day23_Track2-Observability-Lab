@@ -35,11 +35,11 @@ processors:
       - name: keep-slow
         type: latency
         latency: { threshold_ms: 2000 }
-      - name: probabilistic-1pct
+      - name: probabilistic-10pct
         type: probabilistic
-        probabilistic: { sampling_percentage: 1 }
+        probabilistic: { sampling_percentage: 10 }
 
-  # Add deployment env to every span/metric resource attribute
+  # Add deployment env to resource attributes
   resource:
     attributes:
       - key: deployment.environment

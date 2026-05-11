@@ -10,7 +10,7 @@ groups:
             0.99,
             sum(rate(inference_latency_seconds_bucket[5m])) by (le, model)
           ) > 2.0
-        for: 5m
+        for: 30s
         labels:
           severity: warning
           service: inference-api

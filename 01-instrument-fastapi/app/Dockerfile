@@ -5,6 +5,7 @@ WORKDIR /app
 # Install curl (used by Compose health-check) + minimal build deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
+        bash \
     && rm -rf /var/lib/apt/lists/*
 
 # Dependency install layer (cacheable)

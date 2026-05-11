@@ -11,3 +11,14 @@ providers:
     options:
       path: /var/lib/grafana/dashboards
       foldersFromFilesStructure: false
+
+  - name: 'Day23-05-Integration'
+    orgId: 1
+    folder: '05-integration'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/05-integration
+      foldersFromFilesStructure: false

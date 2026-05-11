@@ -1,0 +1,27 @@
+# Pyroscope server config (B1 bonus)
+# Receives profiling data from the day23-app agent and serves the flame graph UI.
+
+server:
+  http-server-address: 0.0.0.0:4040
+  grpc-server-address: 0.0.0.0:20102
+  # No auth for local lab
+  # In production: set auth.login-keys or OIDC
+
+database:
+  # Use SQLite for the lab (no Postgres required)
+  driver: sqlite3
+  datasource: data/pyroscope.db
+
+storage:
+  path: data/
+
+# Scrape profiles from pyroscope agents (push model — agents push to server)
+scrape-config:
+  # The agent in day23-app pushes; no scrape config needed for push mode.
+  # Uncomment below and comment `profile:
+  #   ...` in the app service to switch to pull mode (server scrapes agents).
+  # enabled-profiles: [cpu, mem, goroutine, mutex]
+  # scrape-interval: 10s
+
+# Log level: debug is noisy; switch to 'info' once confirmed working
+log-level: info

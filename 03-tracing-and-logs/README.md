@@ -15,7 +15,7 @@ The collector is configured with a **composite tail-sampling policy**:
 
 1. Keep 100% of traces with `status_code == ERROR`
 2. Keep 100% of traces with span duration `> 2s`
-3. Keep 1% of healthy traces (random)
+3. Keep 10% of healthy traces (random)
 
 Buffer: 30s decision window, ~10K spans memory.
 

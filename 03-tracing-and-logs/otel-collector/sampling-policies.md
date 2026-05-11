@@ -6,25 +6,25 @@ The lab's collector keeps:
 |---|---|---|
 | `keep-errors` (status_code = ERROR) | 100% | Errors are rare and high-information; never drop. |
 | `keep-slow` (latency > 2s) | 100% | P99 outliers are the reason you'd want a trace. |
-| `probabilistic-1pct` | 1% | Healthy baseline for capacity planning. |
+| `probabilistic-10pct` | 10% | Healthy baseline for capacity planning. |
 
 ## Sampled count formula
 
 For a service producing `N` traces / sec:
 
 ```
-sampled = N × (P(error) × 1.0 + P(slow ∧ ¬error) × 1.0 + P(healthy) × 0.01)
+sampled = N × (P(error) × 1.0 + P(slow ∧ ¬error) × 1.0 + P(healthy) × 0.10)
 ```
 
-For typical web traffic (1% errors, 1% slow, 98% healthy):
+With typical traffic proportions (1% errors, 1% slow, 98% healthy):
 
 ```
-sampled = N × (0.01 + 0.01 + 0.98 × 0.01)
-        = N × 0.0298
-        ≈ 3% retention
+sampled = N × (0.01 + 0.01 + 0.98 × 0.10)
+        = N × 0.12
+        ≈ 12% retention
 ```
 
-Cost reduction: **~97%** vs. retain-everything.
+Cost reduction: **~88%** vs. retain-everything.
 
 ## Buffer cost
 

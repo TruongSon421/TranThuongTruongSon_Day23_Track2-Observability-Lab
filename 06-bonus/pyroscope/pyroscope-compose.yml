@@ -1,0 +1,47 @@
+# Pyroscope server + agent for B1 eBPF/process profiling bonus
+services:
+  pyroscope:
+    image: grafana/pyroscope:latest
+    container_name: day23-pyroscope
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4040:4040"  # Web UI
+      - "127.0.0.1:20102:20102" # gRPC ingestion
+    volumes:
+      - ../pyroscope.yml:/etc/pyroscope/pyroscope.yml:ro
+      - pyroscope-data:/data
+    command: ["server", "--config=/etc/pyroscope/pyroscope.yml"]
+    networks: [obs]
+
+  # Instrumented app — uses pyroscope entrypoint instead of the standard Dockerfile CMD
+  # This container replaces the default 'app' service when running with B1 bonus.
+  # Run with: docker compose -f docker-compose.yml -f bonus/pyroscope/pyroscope-compose.yml up -d
+  app-with-pyroscope:
+    build:
+      context: ./01-instrument-fastapi/app
+      dockerfile: Dockerfile
+    container_name: day23-app-profiled
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
+    environment:
+      PYROSCOPE_SERVER: "http://pyroscope:4040"
+      PYROSCOPE_APP_NAME: "day23-app"
+      PYROSCOPE_SAMPLE_RATE: "10"
+      PYROSCOPE_PROFILER: "process"   # change to 'ebpf' on Linux for kernel-level profiling
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_SERVICE_NAME: inference-api
+      OTEL_RESOURCE_ATTRIBUTES: deployment.environment=lab,service.namespace=aicb
+      LOG_LEVEL: INFO
+    volumes:
+      - ./06-bonus/pyroscope/entrypoint.sh:/app/entrypoint.sh:ro
+      - pyroscope-data:/data
+    labels:
+      - "app=day23"
+      - "pyroscope=true"
+    depends_on:
+      pyroscope:
+        condition: service_started
+    networks: [obs]
+
+volumes:
+  pyroscope-data:
+    name: day23-pyroscope-data

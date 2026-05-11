@@ -28,18 +28,18 @@
       "fieldConfig": {"defaults": {"unit": "short", "noValue": "No Data (Day 18 not running)"}}
     },
     {
-      "type": "stat", "title": "Day 19 — Qdrant Collections",
+      "type": "stat", "title": "Day 19 — Qdrant Points Total",
       "id": 4, "gridPos": {"x": 0, "y": 6, "w": 8, "h": 6},
       "datasource": {"type": "prometheus", "uid": "prometheus"},
-      "targets": [{"expr": "day19_qdrant_collections", "refId": "A"}],
-      "fieldConfig": {"defaults": {"unit": "short", "noValue": "No Data (start monitor-day19...)"}}
+      "targets": [{"expr": "sum(qdrant_points_total{job=\"day19-qdrant\"})", "refId": "A"}],
+      "fieldConfig": {"defaults": {"unit": "short", "noValue": "No Data (Day 19 not running)"}}
     },
     {
-      "type": "timeseries", "title": "Day 20 — llama.cpp Tokens/sec",
+      "type": "timeseries", "title": "Day 20 — llama.cpp Tokens Predicted/sec",
       "id": 5, "gridPos": {"x": 8, "y": 6, "w": 8, "h": 6},
       "datasource": {"type": "prometheus", "uid": "prometheus"},
-      "targets": [{"expr": "day20_llamacpp_tokens_per_second", "refId": "A"}],
-      "fieldConfig": {"defaults": {"unit": "ops", "noValue": "No Data (start monitor-day20...)"}}
+      "targets": [{"expr": "rate(llamacpp_tokens_predicted_total{job=\"day20-llamacpp\"}[30s])", "refId": "A"}],
+      "fieldConfig": {"defaults": {"unit": "ops", "noValue": "No Data (Day 20 not running)"}}
     },
     {
       "type": "stat", "title": "Day 22 — DPO Eval Pass Rate",
